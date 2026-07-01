@@ -1,0 +1,532 @@
+HTML
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dashboard de Metas Épico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Configurações PWA e Mobile nativo -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b0d13">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <style>
+        :root {
+            --bg-deep: #0b0d13;
+            --bg-surface: #131722;
+            --border-glow: #1e2638;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            
+            --neon-cyan: #00f0ff;
+            --neon-pink: #ff0055;
+            --neon-green: #00ffaa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            padding-top: calc(env(safe-area-inset-top) + 24px);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 40px);
+        }
+
+        /* --- CABEÇALHO SUTIL --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* Botão estilizado para abrir o painel interno */
+        .btn-trigger-form {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-glow);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-trigger-form:active {
+            background: var(--neon-cyan);
+            color: #000;
+            border-color: var(--neon-cyan);
+        }
+
+        /* --- FORMULÁRIO ACCORDION --- */
+        .form-expandivel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), margin-bottom 0.3s ease;
+            background: var(--bg-surface);
+            border-radius: 16px;
+            border: 0 solid transparent;
+        }
+
+        .form-expandivel.aberto {
+            max-height: 350px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-glow);
+            padding: 16px;
+        }
+
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-block label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .input-block input {
+            background: var(--bg-deep);
+            border: 1px solid var(--border-glow);
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .datas-flex {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .datas-flex .input-block { flex: 1; }
+
+        .btn-salvar {
+            background: var(--text-primary);
+            color: var(--bg-deep);
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        /* --- TABS (FILTROS DE NAVEGAÇÃO SUPERIOR) --- */
+        .tabs-navegacao {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .tabs-navegacao::-webkit-scrollbar { display: none; }
+
+        .tab-item {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .tab-item.ativo {
+            background: var(--bg-surface);
+            border-color: var(--border-glow);
+            color: var(--text-primary);
+            font-weight: 600;
+            }
+
+        /* --- LISTA LINEAR DE METAS --- */
+        .lista-linear {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .row-meta {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-glow);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        /* Indicador sutil de cor lateral esquerda */
+        .status-badge {
+            width: 8px;
+            height: 38px;
+            border-radius: 4px;
+            background: var(--neon-cyan);
+            flex-shrink: 0;
+        }
+
+        .row-meta.concluida .status-badge { background: var(--neon-green); }
+        .row-meta.regressiva .status-badge { background: var(--neon-pink); }
+
+        .info-bloco {
+            flex: 1;
+            min-width: 0; /* Impede quebra de layout com textos longos */
+        }
+
+        .meta-nome {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .row-meta.concluida .meta-nome {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        .meta-prazos {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Bloco numérico compacto */
+        .contador-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glow);
+            padding: 6px 10px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 55px;
+        }
+
+        .contador-num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            line-height: 1;
+        }
+        
+        .row-meta.concluida .contador-num { color: var(--neon-green); }
+        .row-meta.regressiva .contador-num { color: var(--neon-pink); }
+
+        .contador-sub {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-top: 1px;
+        }
+
+        /* Botão de Opções rápido (Três pontos / Ações) */
+        .btn-menu-acoes {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Área oculta nativa de ações expansível no clique */
+        .botoes-acoes-inline {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-mini-click {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-glow);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-mini-click svg { width: 12px; height: 12px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Meus Objetivos</h1>
+        <button class="btn-trigger-form" onclick="toggleFormulario()">
+            <span>+</span> Novo
+        </button>
+    </header>
+
+    <!-- Formulário que empurra a lista de forma nativa -->
+    <div class="form-expandivel" id="painelForm">
+        <div class="form-grid">
+            <div class="input-block">
+                <label for="nomeMeta">Identificação do Objetivo</label>
+                <input type="text" id="nomeMeta" placeholder="Nome da meta ou sprint..." onkeydown="verificarEnter(event)">
+            </div>
+            <div class="datas-flex">
+                <div class="input-block">
+                    <label for="dataInicioMeta">Início</label>
+                    <input type="date" id="dataInicioMeta">
+                </div>
+                <div class="input-block">
+                    <label for="dataFinalMeta">Prazo Limite</label>
+                    <input type="date" id="dataFinalMeta">
+                </div>
+            </div>
+            <button class="btn-salvar" onclick="adicionarMetaLinear()">Criar Entrada</button>
+        </div>
+    </div>
+
+    <!-- Abas Estilo Pílula -->
+    <div class="tabs-navegacao">
+        <button class="tab-item ativo" onclick="filtrarPainel('todas', this)">Todas</button>
+        <button class="tab-item" onclick="filtrarPainel('ativas', this)">Ativas</button>
+        <button class="tab-item" onclick="filtrarPainel('regressivas', this)">Contagem Regressiva</button>
+        <button class="tab-item" onclick="filtrarPainel('concluidas', this)">Concluídas</button>
+    </div>
+
+    <!-- Lista de Metas Compacta -->
+    <div class="lista-linear" id="containerMetas"></div>
+
+    <script>
+        let filtroAtual = 'todas';
+        const hojeStr = new Date().toISOString().split('T')[0];
+
+        let listaMetas = JSON.parse(localStorage.getItem('minhasMetasDoDesafio')) || [
+            { id: Date.now(), nome: "Foco Sem Interrupções", dataInicio: hojeStr, dataFinal: "", concluida: false }
+        ];
+
+        document.getElementById('dataInicioMeta').value = hojeStr;
+
+        function escaparHTML(string) {
+            const mapareverso = {
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '/': '&#x2F;'
+            };
+            return string.replace(/[&<>"'/]/g, m => mapareverso[m]);
+        }
+
+        function verificarEnter(event) {
+            if (event.key === 'Enter') adicionarMetaLinear();
+        }
+
+        function toggleFormulario() {
+            const painel = document.getElementById('painelForm');
+            painel.classList.toggle('aberto');
+        }
+
+        function salvarDados() {
+            localStorage.setItem('minhasMetasDoDesafio', JSON.stringify(listaMetas));
+            renderizarMetas();
+        }
+
+        function adicionarMetaLinear() {
+            const nomeInput = document.getElementById('nomeMeta');
+            const dataInicioInput = document.getElementById('dataInicioMeta');
+            const dataFinalInput = document.getElementById('dataFinalMeta');
+
+            if (!nomeInput.value.trim()) {
+                alert("Informe o nome do objetivo.");
+                return;
+            }
+
+            const novaMeta = {
+                id: Date.now(),
+                nome: nomeInput.value.trim(),
+                dataInicio: dataInicioInput.value,
+                dataFinal: dataFinalInput.value,
+                concluida: false
+            };
+
+            listaMetas.push(novaMeta);
+            salvarDados();
+            
+            nomeInput.value = "";
+            dataFinalInput.value = "";
+            toggleFormulario();
+        }
+
+        function excluirMeta(id) {
+            if (confirm("Deletar permanentemente?")) {
+                listaMetas = listaMetas.filter(meta => meta.id !== id);
+                salvarDados();
+            }
+        }
+
+        function editarMeta(id) {
+            const meta = listaMetas.find(m => m.id === id);
+            if (!meta) return;
+
+            const novoNome = prompt("Alterar identificação:", meta.nome);
+            if (novoNome !== null && novoNome.trim() !== "") {
+                meta.nome = novoNome.trim();
+                salvarDados();
+            }
+        }
+
+        function alternarConclusaoMeta(id) {
+            const meta = listaMetas.find(m => m.id === id);
+            if (meta) {
+                meta.concluida = !meta.concluida;
+                if (meta.concluida && !meta.dataFinal) {
+                    meta.dataFinal = new Date().toISOString().split('T')[0];
+                }
+                salvarDados();
+            }
+        }
+
+        function criarDataLocal(stringData) {
+            if (!stringData) return null;
+            const partes = stringData.split('-');
+            return new Date(partes[0], partes[1] - 1, partes[2], 0, 0, 0, 0);
+        }
+
+        function formatarDataBR(stringData) {
+            if(!stringData) return "";
+            const p = stringData.split('-');
+            return `${p[2]}/${p[1]}`;
+        }
+
+        function processarDias(meta) {
+            const dataIni = criarDataLocal(meta.dataInicio);
+            const dataFim = criarDataLocal(meta.dataFinal);
+            const dataHoje = new Date();
+            dataHoje.setHours(0,0,0,0);
+
+            if (meta.concluida) {
+                const fimReal = dataFim || dataHoje; 
+                const diff = Math.floor((fimReal - dataIni) / (1000 * 60 * 60 * 24));
+                const totalDias = diff < 0 ? 0 : diff;
+                return { valor: totalDias, sub: "Dias", tipo: "concluida" };
+            }
+
+            if (dataFim && dataFim > dataHoje) {
+                const diff = Math.floor((dataFim - dataHoje) / (1000 * 60 * 60 * 24));
+                return { valor: diff, sub: "Restam", tipo: "regressiva" };
+            }
+
+            const diff = Math.floor((dataHoje - dataIni) / (1000 * 60 * 60 * 24));
+            const diasCorridos = diff < 0 ? 0 : diff;
+            return { valor: diasCorridos, sub: "Ativo", tipo: "normal" };
+        }
+
+        function filtrarPainel(tipo, botao) {
+            filtroAtual = tipo;
+            document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('ativo'));
+            botao.classList.add('ativo');
+            renderizarMetas();
+        }
+
+        function renderizarMetas() {
+            const container = document.getElementById('containerMetas');
+            container.innerHTML = "";
+
+            let metasFiltradas = listaMetas.filter(meta => {
+                const resultado = processarDias(meta);
+                if (filtroAtual === 'ativas') return !meta.concluida && resultado.tipo === 'normal';
+                if (filtroAtual === 'regressivas') return !meta.concluida && resultado.tipo === 'regressiva';
+                if (filtroAtual === 'concluidas') return meta.concluida;
+                return true;
+            });
+
+            if (metasFiltradas.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-style: italic; padding: 30px 0; font-size:0.85rem;">Lista vazia.</p>`;
+                return;
+            }
+
+            metasFiltradas.forEach(meta => {
+                const resultado = processarDias(meta);
+                
+                let classeEstado = "";
+                if (meta.concluida) classeEstado = "concluida";
+                else if (resultado.tipo === "regressiva") classeEstado = "regressiva";
+
+                const txtPrazo = meta.dataFinal ? `• Limite: ${formatarDataBR(meta.dataFinal)}` : '';
+
+                const cardHtml = `
+                    <div class="row-meta ${classeEstado}">
+                        <div class="status-badge"></div>
+                        
+                        <div class="info-bloco">
+                            <div class="meta-nome">${escaparHTML(meta.nome)}</div>
+                            <div class="meta-prazos">Início: ${formatarDataBR(meta.dataInicio)} ${txtPrazo}</div>
+                        </div>
+
+                        <div class="contador-badge">
+                            <div class="contador-num">${resultado.valor}</div>
+                            <div class="contador-sub">${resultado.sub}</div>
+                        </div>
+
+                        <div class="botoes-acoes-inline">
+                            <button class="btn-mini-click" onclick="alternarConclusaoMeta(${meta.id})">
+                                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            </button>
+                            <button class="btn-mini-click" onclick="excluirMeta(${meta.id})">
+                                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        renderizarMetas();
+
+        // --- REGISTRO DO SERVICE WORKER PARA O PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('PWA Service Worker ativo!', reg.scope))
+                    .catch(err => console.error('Erro ao registrar Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
