@@ -8,7 +8,7 @@ HTML
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Configurações PWA e Mobile nativo -->
-    <link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0b0d13">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -522,7 +522,7 @@ HTML
         // --- REGISTRO DO SERVICE WORKER PARA O PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
+               navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('PWA Service Worker ativo!', reg.scope))
                     .catch(err => console.error('Erro ao registrar Service Worker:', err));
             });
